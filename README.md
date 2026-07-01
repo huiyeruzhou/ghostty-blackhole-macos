@@ -1,10 +1,70 @@
-﻿# Black Hole — Windows 桌面黑洞屏保
+﻿# Black Hole — Windows / macOS 桌面黑洞屏保
 
 ![demo](demo.gif)
 
-基于 Eric Bruneton 黑洞着色器的 Windows 桌面黑洞可视化程序。捕获桌面画面，实时渲染史瓦西黑洞的引力透镜、吸积盘、光子环等相对论效应。
+基于 Eric Bruneton 黑洞着色器的桌面黑洞可视化程序。捕获桌面画面，实时渲染史瓦西黑洞的引力透镜、吸积盘、光子环等相对论效应。
+
+## macOS 版
+
+本仓库新增了 macOS 专用入口 `src/macos_main.mm` 和 CMake target `blackhole-macos`。macOS 版不复用 Win32/WGC/DXGI 路径，而是使用：
+
+- GLFW + OpenGL 3.3 渲染黑洞 shader
+- CoreGraphics `CGDisplayCreateImage` 捕获主显示器画面作为引力透镜背景
+- IOKit `HIDIdleTime` 检测用户空闲时间
+- Cocoa 设置屏保级浮动窗口、全 Space 显示、鼠标穿透
+
+### macOS 构建
+
+依赖：
+
+```bash
+brew install cmake glfw
+```
+
+构建：
+
+```bash
+cmake -S . -B _build/macos -DCMAKE_BUILD_TYPE=Release
+cmake --build _build/macos --config Release
+```
+
+产物：
+
+```text
+_build/macos/blackhole-macos.app
+```
+
+### macOS 运行
+
+立即显示黑洞：
+
+```bash
+open _build/macos/blackhole-macos.app --args --render
+```
+
+按 `blackhole_presets.txt` 的 `mode/idleSec` 进入空闲监控：
+
+```bash
+open _build/macos/blackhole-macos.app --args --monitor
+```
+
+首次运行如果桌面背景是纯渐变而不是当前屏幕，请到：
+
+```text
+System Settings -> Privacy & Security -> Screen Recording
+```
+
+给 `blackhole-macos` 或启动它的 Terminal 授权。未授权时程序仍会运行，但只能使用内置 fallback 背景，无法做真实桌面透镜。
+
+### macOS 当前边界
+
+- 已支持主屏幕渲染、桌面截图背景、空闲检测、鼠标穿透、预设轮播。
+- macOS 版目前不提供 Windows 托盘菜单和 ImGui 图形配置器；可直接编辑 `blackhole_presets.txt`。
+- `videoAsIdle` / `autoStart` 字段保持配置兼容，但 macOS 版暂不自动检测前景视频音频，也不自动安装 LaunchAgent。
 
 ## 快速开始
+
+### Windows
 
 1. 双击 
 elease\blackhole.exe
@@ -155,6 +215,7 @@ ghostty-blackhole-main/
 │
 ├── src/                       # 源代码
 │   ├── main.cpp               # 入口（OpenGL / D3D11 双路径，#ifdef 切换）
+│   ├── macos_main.mm          # macOS 入口（GLFW/OpenGL + CoreGraphics + IOKit + Cocoa）
 │   ├── capture_wgc.cpp/h      # WGC 桌面捕获（默认）
 │   ├── capture_dxgi.cpp/h     # DXGI Duplication 备用捕获
 │   ├── gl_texture.cpp/h       # OpenGL 纹理管理
@@ -319,6 +380,4 @@ D3D11 代码完整保留，可通过 `CMakeLists.txt` 第 34 行取消注释重�
 ## License
 
 MIT — 见 [LICENSE](LICENSE)
-
-
 
